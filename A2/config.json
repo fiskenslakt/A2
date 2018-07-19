@@ -1,0 +1,15 @@
+{
+    "token": "NDY5MjgwNzI4Mjg3NDEyMjI4.DjFbYg.HC2-fbS4FkL6XgEunE0kYMpzxcE",
+    "bot": {
+	"plugins": [
+	    "plugins.core"
+	],
+	"commands_require_mention": false,
+	"commands_prefix": "!",
+	"commands_allow_edit": true,
+	"levels": {
+	    "170208380739256320": 500,
+	    "115041170790416388": 500
+	}
+    }
+}
