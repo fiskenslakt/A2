@@ -1,3 +1,4 @@
+#pylint:disable=E1101
 from disco.bot import Plugin
 from disco.bot.command import CommandLevels
 from disco.types.user import Game, GameType, Status
