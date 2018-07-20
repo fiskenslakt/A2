@@ -18,7 +18,7 @@ class CorePlugin(Plugin):
 
         self.log.info('Reloading Plugins')
         reloaded_plugins = []
-        for name, value in self.bot.plugins.iteritems():
+        for name, value in self.bot.plugins.items():
             if 'Core' in name:
                 continue
 
