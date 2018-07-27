@@ -20,16 +20,16 @@ class UtilitiesPlugin(Plugin):
 
         bot.edit('Latency of you to bot: ~{:.2f}ms'.format(user_bot_latency))
 
-    @Plugin.command('choose', '<message:str...>') 
-    def choose_command(self, event, message):
+    @Plugin.command('choose', '<options:str...>') 
+    def choose_command(self, event, options):
         """= choose =
-        Choose between two or more choices
+        Choose between two or more options
         usage    :: $choose
         aliases  :: None
         category :: Utilities
         """
-        choices = message.split('\\')
-        bot_choice = random.choice(choices)
-        if len(choices) > 1:
+        options = options.split('\\')
+        bot_choice = random.choice(options)
+        if len(options) > 1:
             event.msg.reply('I choose: {}'.format(bot_choice))
         
