@@ -110,7 +110,7 @@ class WeatherPlugin(Plugin):
         Formats a string to displays wind information.
         """
         degrees: str = wind.direction
-        cardinal: str = WeatherPlugin.get_cardinal_dir(degrees)
+        cardinal: str = WeatherPlugin.get_cardinal_dir(int(degrees))
 
         return f'{degrees}° ({cardinal}) at {wind.speed} ' \
                f'{units.speed}\nWind chill: {wind.chill}'
@@ -126,8 +126,8 @@ class WeatherPlugin(Plugin):
         return f'Sunrise: {ast["sunrise"]} {tz}\nSunset: {ast["sunset"]} {tz}'
 
     @staticmethod
-    def get_cardinal_dir(degrees: str) -> str:
+    def get_cardinal_dir(degrees: int) -> str:
         """
         Converts degrees to an abbreviated cardinal direction.
         """
-        return WeatherPlugin.CARDINAL_DIRS[int((int(degrees) / 22.5) + 0.5)]
+        return WeatherPlugin.CARDINAL_DIRS[int((degrees % 360 / 22.5) + 0.5)]
