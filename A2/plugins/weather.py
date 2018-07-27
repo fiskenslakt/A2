@@ -1,4 +1,9 @@
+"""
+Functions related to weather.
+"""
+
 from disco.bot import Plugin
+from disco.bot.command import CommandEvent
 from disco.types.message import MessageEmbed
 from weather.weather import Weather, WeatherObject
 from weather.objects.unit_obj import Unit
@@ -10,12 +15,16 @@ class WeatherPlugin(Plugin):
         'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
         'WSW', 'W', 'WNW', 'NW', 'NNW')
     PRESSURE_STATES = ('steady', 'rising', 'falling')
+
+    # Maps Yahoo's condition codes (indices) to OpenWeatherMap's weather icons.
     ICONS = (
         '50d', '11d', '50d', '11d', '11d', '13d', '13d', '13d', '09d', '09d',
         '09d', '09d', '09d', '13d', '13d', '13d', '13d', '09d', '13d', '50d',
         '50d', '50d', '50d', '50d', '50d', '13d', '03d', '02n', '02d', '02n',
         '02d', '01n', '01d', '01n', '01d', '09d', '01d', '11d', '11d', '11d',
         '09d', '13d', '13d', '13d', '04d', '11d', '13d', '11d')
+
+    # Base URL for OpenWeatherMap's weather icons. All icons have .png suffix.
     ICON_BASE = 'http://openweathermap.org/img/w/'
 
     def __init__(self, bot, config):
@@ -24,7 +33,20 @@ class WeatherPlugin(Plugin):
         self.weather = Weather()
 
     @Plugin.command('weather', '<location:str...>')
-    def weather_command(self, event, location):
+    def weather_command(self, event: CommandEvent, location: str):
+        """
+        Displays the weather for a given location.
+
+        Provides information on temperature, atmosphere, wind, & astronomy.
+
+        Parameters
+        ----------
+        event : CommandEvent
+            The event which was created when this command triggered.
+        location : str
+            The location for which to look up the weather.
+
+        """
         result: WeatherObject = self.weather.lookup_by_location(location)
 
         if not result:
@@ -53,8 +75,9 @@ class WeatherPlugin(Plugin):
             value=self.format_astronomy(result),
             inline=True)
 
-        code = int(result.condition.code)
+        code: int = int(result.condition.code)
 
+        # 3200 = Unknown condition.
         if code != 3200:
             embed.set_thumbnail(url=f'{self.ICON_BASE}{self.ICONS[code]}.png')
 
@@ -62,6 +85,9 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_atmosphere(atm: dict, units: Unit) -> str:
+        """
+        Formats a string to displays atmosphere information.
+        """
         state: str = WeatherPlugin.PRESSURE_STATES[int(atm['rising'])]
 
         return f'Humidity: {atm["humidity"]}%\n' \
@@ -70,6 +96,9 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_wind(wind: Wind, units: Unit) -> str:
+        """
+        Formats a string to displays wind information.
+        """
         degrees: str = wind.direction
         cardinal: str = WeatherPlugin.get_cardinal_dir(degrees)
 
@@ -78,6 +107,9 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_astronomy(result: WeatherObject) -> str:
+        """
+        Formats a string to displays astronomy information.
+        """
         tz: str = result.last_build_date[-3:]
         ast: dict = result.astronomy
 
@@ -85,4 +117,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def get_cardinal_dir(degrees: str) -> str:
+        """
+        Converts degrees to an abbreviated cardinal direction.
+        """
         return WeatherPlugin.CARDINAL_DIRS[int((int(degrees) / 22.5) + 0.5)]
