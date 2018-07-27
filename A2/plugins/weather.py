@@ -6,6 +6,7 @@ from disco.bot import Plugin
 from disco.bot.command import CommandEvent
 from disco.types.message import MessageEmbed
 from weather.weather import Weather, WeatherObject
+from weather.objects.forecast_obj import Forecast
 from weather.objects.unit_obj import Unit
 from weather.objects.wind_obj import Wind
 
@@ -60,7 +61,7 @@ class WeatherPlugin(Plugin):
         embed.description = result.condition.text
         embed.add_field(
             name='Temperature',
-            value=f'{result.condition.temp}° {result.units.temperature}',
+            value=self.format_temp(result),
             inline=True)
         embed.add_field(
             name='Atmosphere',
@@ -83,6 +84,14 @@ class WeatherPlugin(Plugin):
                 url=f'http://openweathermap.org/img/w/{self.ICONS[code]}.png')
 
         event.msg.reply(embed=embed)
+
+    @staticmethod
+    def format_temp(result: WeatherObject):
+        forecast: Forecast = result.forecast[0]
+
+        return f'{result.condition.temp}° {result.units.temperature}\n' \
+               f'High: {forecast.high}° {result.units.temperature}\n' \
+               f'Low: {forecast.low}° {result.units.temperature}'
 
     @staticmethod
     def format_atmosphere(atm: dict, units: Unit) -> str:
