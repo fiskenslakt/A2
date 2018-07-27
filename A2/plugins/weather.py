@@ -56,7 +56,7 @@ class WeatherPlugin(Plugin):
             name='Yahoo! Weather',
             url='https://www.yahoo.com/news/weather',
             icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
-        embed.title = result.title[17:]  # Removes 'Yahoo! Weather - '.
+        embed.title = result.print_obj['item']['title']
         embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
         embed.description = result.condition.text
         embed.add_field(
