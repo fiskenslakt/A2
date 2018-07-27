@@ -24,9 +24,6 @@ class WeatherPlugin(Plugin):
         '02d', '01n', '01d', '01n', '01d', '09d', '01d', '11d', '11d', '11d',
         '09d', '13d', '13d', '13d', '04d', '11d', '13d', '11d')
 
-    # Base URL for OpenWeatherMap's weather icons. All icons have .png suffix.
-    ICON_BASE = 'http://openweathermap.org/img/w/'
-
     def __init__(self, bot, config):
         super().__init__(bot, config)
 
@@ -54,9 +51,12 @@ class WeatherPlugin(Plugin):
             return
 
         embed: MessageEmbed = MessageEmbed()
-        embed.set_author(name='Yahoo! Weather')
-        embed.title = result.title[17:]
-        embed.url = result.print_obj['link'].split('*')[-1]
+        embed.set_author(
+            name='Yahoo! Weather',
+            url='https://www.yahoo.com/news/weather',
+            icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
+        embed.title = result.title[17:]  # Removes 'Yahoo! Weather - '.
+        embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
         embed.description = result.condition.text
         embed.add_field(
             name='Temperature',
@@ -79,7 +79,8 @@ class WeatherPlugin(Plugin):
 
         # 3200 = Unknown condition.
         if code != 3200:
-            embed.set_thumbnail(url=f'{self.ICON_BASE}{self.ICONS[code]}.png')
+            embed.set_thumbnail(
+                url=f'http://openweathermap.org/img/w/{self.ICONS[code]}.png')
 
         event.msg.reply(embed=embed)
 
