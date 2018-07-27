@@ -85,6 +85,43 @@ class WeatherPlugin(Plugin):
 
         event.msg.reply(embed=embed)
 
+    @Plugin.command('forecast', '<location:str...>')
+    def weather_command(self, event: CommandEvent, location: str):
+        """
+        Displays a 10-day weather forecast for a given location.
+
+        Parameters
+        ----------
+        event : CommandEvent
+            The event which was created when this command triggered.
+        location : str
+            The location for which to retrieve a forecast.
+
+        """
+        result: WeatherObject = self.weather.lookup_by_location(location)
+
+        if not result:
+            event.msg.reply(f'Could not retrieve a forecast for `{location}`.')
+            return
+
+        embed: MessageEmbed = MessageEmbed()
+        embed.set_author(
+            name='Yahoo! Weather',
+            url='https://www.yahoo.com/news/weather',
+            icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
+        embed.title = f'10-day Weather Forecast for {result.title[17:]}'
+        embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
+
+        for forecast in result.forecast:
+            embed.add_field(
+                name=f'{forecast.day} ({forecast.date[:6]})',
+                value=f'{forecast.text}\n'
+                      f'High: {forecast.high}° {result.units.temperature}\n'
+                      f'Low: {forecast.low}° {result.units.temperature}',
+                inline=True)
+
+        event.msg.reply(embed=embed)
+
     @staticmethod
     def format_temp(result: WeatherObject):
         forecast: Forecast = result.forecast[0]
