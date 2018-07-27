@@ -1,1 +1,2 @@
 -e git+git://github.com/b1naryth1ef/disco.git#egg=disco-py
+weather-api>=1.0.4
