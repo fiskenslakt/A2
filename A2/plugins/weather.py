@@ -111,8 +111,8 @@ class WeatherPlugin(Plugin):
             embed.add_field(
                 name=f'{forecast.day} ({forecast.date[:6]})',
                 value=f'{emoji}{forecast.text}\n'
-                      f'High: {forecast.high}° {result.units.temperature}\n'
-                      f'Low: {forecast.low}° {result.units.temperature}',
+                      f'High: `{forecast.high}° {result.units.temperature}`\n'
+                      f'Low: `{forecast.low}° {result.units.temperature}`',
                 inline=True)
 
         event.msg.reply(embed=embed)
@@ -133,10 +133,10 @@ class WeatherPlugin(Plugin):
         forecast: Forecast = result.forecast[0]
         emoji: str = WeatherPlugin.get_emoji(result.condition.code)
 
-        return f'{emoji}{result.condition.text}\n' \
-               f'{result.condition.temp}° {result.units.temperature}\n' \
-               f'High: {forecast.high}° {result.units.temperature}\n' \
-               f'Low: {forecast.low}° {result.units.temperature}'
+        return f'{emoji}{result.condition.temp}° {result.units.temperature} ' \
+               f'- {result.condition.text}\n' \
+               f'High: `{forecast.high}° {result.units.temperature}`\n' \
+               f'Low: `{forecast.low}° {result.units.temperature}`'
 
     @staticmethod
     def format_atmosphere(atm: dict, units: Unit) -> str:
@@ -145,9 +145,9 @@ class WeatherPlugin(Plugin):
         """
         state: str = WeatherPlugin.PRESSURE_STATES[int(atm['rising'])]
 
-        return f'Humidity: {atm["humidity"]}%\n' \
-               f'Pressure: {atm["pressure"]} {units.pressure} ({state})\n' \
-               f'Visibility: {atm["visibility"]} {units.distance}'
+        return f'Humidity: `{atm["humidity"]}%`\n' \
+               f'Pressure: `{atm["pressure"]} {units.pressure}` ({state})\n' \
+               f'Visibility: `{atm["visibility"]} {units.distance}`'
 
     @staticmethod
     def format_wind(wind: Wind, units: Unit) -> str:
@@ -157,8 +157,8 @@ class WeatherPlugin(Plugin):
         degrees: str = wind.direction
         cardinal: str = WeatherPlugin.get_cardinal_dir(degrees)
 
-        return f'{degrees}° ({cardinal}) at {wind.speed} ' \
-               f'{units.speed}\nWind chill: {wind.chill}'
+        return f'`{degrees}°` ({cardinal}) at `{wind.speed} {units.speed}`\n' \
+               f'Wind chill: `{wind.chill}`'
 
     @staticmethod
     def format_astronomy(result: WeatherObject) -> str:
@@ -168,7 +168,8 @@ class WeatherPlugin(Plugin):
         tz: str = result.last_build_date[-3:]
         ast: dict = result.astronomy
 
-        return f'Sunrise: {ast["sunrise"]} {tz}\nSunset: {ast["sunset"]} {tz}'
+        return f'Sunrise: `{ast["sunrise"]} {tz}`\n' \
+               f'Sunset: `{ast["sunset"]} {tz}`'
 
     @staticmethod
     def get_cardinal_dir(degrees: Union[int, str]) -> str:
