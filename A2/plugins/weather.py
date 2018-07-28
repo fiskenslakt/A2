@@ -1,7 +1,6 @@
 """
 Functions related to weather.
 """
-
 from typing import Optional, Union
 
 from disco.bot import Plugin
@@ -119,6 +118,9 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def get_base_embed(result: WeatherObject) -> MessageEmbed:
+        """
+        Creates an embed and sets some common properties.
+        """
         embed: MessageEmbed = MessageEmbed()
         embed.set_author(
             name='Yahoo! Weather',
@@ -129,7 +131,10 @@ class WeatherPlugin(Plugin):
         return embed
 
     @staticmethod
-    def format_condition(result: WeatherObject):
+    def format_condition(result: WeatherObject) -> str:
+        """
+        Formats a string displaying the current condition information.
+        """
         forecast: Forecast = result.forecast[0]
         emoji: str = WeatherPlugin.get_emoji(result.condition.code)
 
@@ -182,12 +187,18 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def get_emoji(code: Union[int, str]) -> str:
+        """
+        Returns an emoji based on a condition code.
+        """
         code: int = int(code)
 
         return f'{WeatherPlugin.ICONS[code][1]} ' if code != 3200 else ''
 
     @staticmethod
     def get_thumbnail(code: Union[int, str]) -> Optional[str]:
+        """
+        Returns an OpenWeatherMap icon URL based on a condition code.
+        """
         code: int = int(code)
 
         if code != 3200:
