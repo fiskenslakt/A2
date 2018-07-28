@@ -65,11 +65,7 @@ class WeatherPlugin(Plugin):
         embed: MessageEmbed = self.get_base_embed(result)
         embed.title = result.print_obj['item']['title']
         embed.set_thumbnail(url=self.get_thumbnail(result.condition.code))
-        embed.description = result.condition.text
-        embed.add_field(
-            name='Temperature',
-            value=self.format_temp(result),
-            inline=True)
+        embed.description = self.format_condition(result)
         embed.add_field(
             name='Atmosphere',
             value=self.format_atmosphere(result.atmosphere, result.units),
@@ -133,10 +129,12 @@ class WeatherPlugin(Plugin):
         return embed
 
     @staticmethod
-    def format_temp(result: WeatherObject):
+    def format_condition(result: WeatherObject):
         forecast: Forecast = result.forecast[0]
+        emoji: str = WeatherPlugin.get_emoji(result.condition.code)
 
-        return f'{result.condition.temp}° {result.units.temperature}\n' \
+        return f'{emoji}{result.condition.text}\n' \
+               f'{result.condition.temp}° {result.units.temperature}\n' \
                f'High: {forecast.high}° {result.units.temperature}\n' \
                f'Low: {forecast.low}° {result.units.temperature}'
 
