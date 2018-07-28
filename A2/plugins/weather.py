@@ -62,13 +62,8 @@ class WeatherPlugin(Plugin):
             event.msg.reply(f'Could not find weather for `{location}`.')
             return
 
-        embed: MessageEmbed = MessageEmbed()
-        embed.set_author(
-            name='Yahoo! Weather',
-            url='https://www.yahoo.com/news/weather',
-            icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
+        embed: MessageEmbed = self.get_base_embed(result)
         embed.title = result.print_obj['item']['title']
-        embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
         embed.set_thumbnail(url=self.get_thumbnail(result.condition.code))
         embed.description = result.condition.text
         embed.add_field(
@@ -111,13 +106,8 @@ class WeatherPlugin(Plugin):
             event.msg.reply(f'Could not retrieve a forecast for `{location}`.')
             return
 
-        embed: MessageEmbed = MessageEmbed()
-        embed.set_author(
-            name='Yahoo! Weather',
-            url='https://www.yahoo.com/news/weather',
-            icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
+        embed: MessageEmbed = self.get_base_embed(result)
         embed.title = f'10-day Weather Forecast for {result.title[17:]}'
-        embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
 
         for forecast in result.forecast:
             emoji: str = WeatherPlugin.get_emoji(forecast.code)
@@ -130,6 +120,17 @@ class WeatherPlugin(Plugin):
                 inline=True)
 
         event.msg.reply(embed=embed)
+
+    @staticmethod
+    def get_base_embed(result: WeatherObject) -> MessageEmbed:
+        embed: MessageEmbed = MessageEmbed()
+        embed.set_author(
+            name='Yahoo! Weather',
+            url='https://www.yahoo.com/news/weather',
+            icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
+        embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
+
+        return embed
 
     @staticmethod
     def format_temp(result: WeatherObject):
