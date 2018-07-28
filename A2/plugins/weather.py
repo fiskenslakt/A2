@@ -56,7 +56,9 @@ class WeatherPlugin(Plugin):
         """
         result: WeatherObject = self.weather.lookup_by_location(location)
 
-        if not result:
+        # Sometimes the response is OK but only contains units. Assumes failure
+        # if some arbitrary top-level element besides units doesn't exist.
+        if not result or 'link' not in result.print_obj:
             event.msg.reply(f'Could not find weather for `{location}`.')
             return
 
@@ -103,7 +105,9 @@ class WeatherPlugin(Plugin):
         """
         result: WeatherObject = self.weather.lookup_by_location(location)
 
-        if not result:
+        # Sometimes the response is OK but only contains units. Assumes failure
+        # if some arbitrary top-level element besides units doesn't exist.
+        if not result or 'link' not in result.print_obj:
             event.msg.reply(f'Could not retrieve a forecast for `{location}`.')
             return
 
