@@ -2,6 +2,8 @@
 Functions related to weather.
 """
 
+from typing import Optional, Union
+
 from disco.bot import Plugin
 from disco.bot.command import CommandEvent
 from disco.types.message import MessageEmbed
@@ -17,13 +19,20 @@ class WeatherPlugin(Plugin):
         'WSW', 'W', 'WNW', 'NW', 'NNW')
     PRESSURE_STATES = ('steady', 'rising', 'falling')
 
-    # Maps Yahoo's condition codes (indices) to OpenWeatherMap's weather icons.
+    # Maps Yahoo's condition codes to OpenWeatherMap's weather icons and emojis.
     ICONS = (
-        '50d', '11d', '50d', '11d', '11d', '13d', '13d', '13d', '09d', '09d',
-        '09d', '09d', '09d', '13d', '13d', '13d', '13d', '09d', '13d', '50d',
-        '50d', '50d', '50d', '50d', '50d', '13d', '03d', '02n', '02d', '02n',
-        '02d', '01n', '01d', '01n', '01d', '09d', '01d', '11d', '11d', '11d',
-        '09d', '13d', '13d', '13d', '04d', '11d', '13d', '11d')
+        ('50d', '🌪️'), ('11d', '⛈️'), ('50d', '🌀'), ('11d', '⛈️'),
+        ('11d', '🌩️'), ('13d', '🌨️'), ('13d', '🌨️'), ('13d', '🌨️'),
+        ('09d', '💧'), ('09d', '💧'), ('09d', '🌧️'), ('09d', '🌧️'),
+        ('09d', '🌧️'), ('13d', '🌨️'), ('13d', '🌨️'), ('13d', '🌨️'),
+        ('13d', '🌨️'), ('09d', '🌧️'), ('13d', '🌨️'), ('50d', '💨'),
+        ('50d', '🌫️'), ('50d', '🌫️'), ('50d', '💨'), ('50d', '💨'),
+        ('50d', '💨'), ('13d', '❄️'), ('03d', '☁️'), ('02n', '☁️'),
+        ('02d', '🌥️'), ('02n', '☁️'), ('02d', '⛅'), ('01n', '🌙'),
+        ('01d', '☀️'), ('01n', '🌙'), ('01d', '🌤️'), ('09d', '🌧️'),
+        ('01d', '♨️'), ('11d', '🌩️'), ('11d', '🌩️'), ('11d', '🌩️'),
+        ('09d', '🌦️'), ('13d', '🌨️'), ('13d', '🌨️'), ('13d', '🌨️'),
+        ('04d', '☁️'), ('11d', '🌩️'), ('13d', '🌨️'), ('11d', '🌩️'))
 
     def __init__(self, bot, config):
         super().__init__(bot, config)
@@ -58,6 +67,7 @@ class WeatherPlugin(Plugin):
             icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
         embed.title = result.print_obj['item']['title']
         embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
+        embed.set_thumbnail(url=self.get_thumbnail(result.condition.code))
         embed.description = result.condition.text
         embed.add_field(
             name='Temperature',
@@ -76,17 +86,10 @@ class WeatherPlugin(Plugin):
             value=self.format_astronomy(result),
             inline=True)
 
-        code: int = int(result.condition.code)
-
-        # 3200 = Unknown condition.
-        if code != 3200:
-            embed.set_thumbnail(
-                url=f'http://openweathermap.org/img/w/{self.ICONS[code]}.png')
-
         event.msg.reply(embed=embed)
 
     @Plugin.command('forecast', '<location:str...>')
-    def weather_command(self, event: CommandEvent, location: str):
+    def forecast_command(self, event: CommandEvent, location: str):
         """
         Displays a 10-day weather forecast for a given location.
 
@@ -113,9 +116,11 @@ class WeatherPlugin(Plugin):
         embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
 
         for forecast in result.forecast:
+            emoji: str = WeatherPlugin.get_emoji(forecast.code)
+
             embed.add_field(
                 name=f'{forecast.day} ({forecast.date[:6]})',
-                value=f'{forecast.text}\n'
+                value=f'{emoji}{forecast.text}\n'
                       f'High: {forecast.high}° {result.units.temperature}\n'
                       f'Low: {forecast.low}° {result.units.temperature}',
                 inline=True)
@@ -168,3 +173,18 @@ class WeatherPlugin(Plugin):
         Converts degrees to an abbreviated cardinal direction.
         """
         return WeatherPlugin.CARDINAL_DIRS[int((degrees % 360 / 22.5) + 0.5)]
+
+    @staticmethod
+    def get_emoji(code: Union[int, str]) -> str:
+        code: int = int(code)
+
+        return f'{WeatherPlugin.ICONS[code][1]} ' if code != 3200 else ''
+
+    @staticmethod
+    def get_thumbnail(code: Union[int, str]) -> Optional[str]:
+        code: int = int(code)
+
+        if code != 3200:
+            icon: str = WeatherPlugin.ICONS[code][0]
+
+            return f'http://openweathermap.org/img/w/{icon}.png'
