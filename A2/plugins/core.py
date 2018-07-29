@@ -19,7 +19,8 @@ class CorePlugin(Plugin):
         self.log.info('Reloading Plugins')
         reloaded_plugins = []
         for name, value in self.bot.plugins.copy().items():
-            if 'Core' in name:
+            # Don't reload Core.
+            if value == self:
                 continue
 
             self.log.info('reloading {}'.format(name))
