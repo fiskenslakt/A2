@@ -58,7 +58,7 @@ class WeatherPlugin(Plugin):
         # Sometimes the response is OK but only contains units. Assumes failure
         # if some arbitrary top-level element besides units doesn't exist.
         if not result or 'link' not in result.print_obj:
-            event.msg.reply(f'Could not find weather for `{location}`.')
+            event.msg.reply('Could not find weather for `{}`.'.format(location))
             return
 
         embed: MessageEmbed = self.get_base_embed(result)
@@ -98,20 +98,22 @@ class WeatherPlugin(Plugin):
         # Sometimes the response is OK but only contains units. Assumes failure
         # if some arbitrary top-level element besides units doesn't exist.
         if not result or 'link' not in result.print_obj:
-            event.msg.reply(f'Could not retrieve a forecast for `{location}`.')
+            event.msg.reply(
+                'Could not retrieve a forecast for `{}`.'.format(location))
             return
 
         embed: MessageEmbed = self.get_base_embed(result)
-        embed.title = f'10-day Weather Forecast for {result.title[17:]}'
+        embed.title = '10-day Weather Forecast for {}'.format(result.title[17:])
 
         for forecast in result.forecast:
             emoji: str = WeatherPlugin.get_emoji(forecast.code)
 
             embed.add_field(
-                name=f'{forecast.day} ({forecast.date[:6]})',
-                value=f'{emoji}{forecast.text}\n'
-                      f'High: `{forecast.high}° {result.units.temperature}`\n'
-                      f'Low: `{forecast.low}° {result.units.temperature}`',
+                name='{} ({})'.format(forecast.day, forecast.date[:6]),
+                value='{}{}\nHigh: `{}° {}`\nLow: `{}° {}`'.format(
+                    emoji, forecast.text, forecast.high,
+                    result.units.temperature, forecast.low,
+                    result.units.temperature),
                 inline=True)
 
         event.msg.reply(embed=embed)
@@ -138,10 +140,9 @@ class WeatherPlugin(Plugin):
         forecast: Forecast = result.forecast[0]
         emoji: str = WeatherPlugin.get_emoji(result.condition.code)
 
-        return f'{emoji}{result.condition.temp}° {result.units.temperature} ' \
-               f'- {result.condition.text}\n' \
-               f'High: `{forecast.high}° {result.units.temperature}`\n' \
-               f'Low: `{forecast.low}° {result.units.temperature}`'
+        return '{0}{1}° {5} - {2}\nHigh: `{3}° {5}`\nLow: `{4}° {5}`'.format(
+            emoji, result.condition.temp, result.condition.text, forecast.high,
+            forecast.low, result.units.temperature)
 
     @staticmethod
     def format_atmosphere(atm: dict, units: Unit) -> str:
@@ -150,9 +151,9 @@ class WeatherPlugin(Plugin):
         """
         state: str = WeatherPlugin.PRESSURE_STATES[int(atm['rising'])]
 
-        return f'Humidity: `{atm["humidity"]}%`\n' \
-               f'Pressure: `{atm["pressure"]} {units.pressure}` ({state})\n' \
-               f'Visibility: `{atm["visibility"]} {units.distance}`'
+        return 'Humidity: `{}%`\nPressure: `{} {}` ({})\nVisibility: `{} {}`'\
+            .format(atm["humidity"], atm["pressure"], units.pressure, state,
+                    atm["visibility"], units.distance)
 
     @staticmethod
     def format_wind(wind: Wind, units: Unit) -> str:
@@ -162,8 +163,8 @@ class WeatherPlugin(Plugin):
         degrees: str = wind.direction
         cardinal: str = WeatherPlugin.get_cardinal_dir(degrees)
 
-        return f'`{degrees}°` ({cardinal}) at `{wind.speed} {units.speed}`\n' \
-               f'Wind chill: `{wind.chill}`'
+        return '`{}°` ({}) at `{} {}`\nWind chill: `{}`'.format(
+            degrees, cardinal, wind.speed, units.speed, wind.chill)
 
     @staticmethod
     def format_astronomy(result: WeatherObject) -> str:
@@ -173,8 +174,8 @@ class WeatherPlugin(Plugin):
         tz: str = result.last_build_date[-3:]
         ast: dict = result.astronomy
 
-        return f'Sunrise: `{ast["sunrise"]} {tz}`\n' \
-               f'Sunset: `{ast["sunset"]} {tz}`'
+        return 'Sunrise: `{0} {2}`\nSunset: `{1} {2}`'.format(
+            ast["sunrise"], ast["sunset"], tz)
 
     @staticmethod
     def get_cardinal_dir(degrees: Union[int, str]) -> str:
@@ -192,7 +193,7 @@ class WeatherPlugin(Plugin):
         """
         code: int = int(code)
 
-        return f'{WeatherPlugin.ICONS[code][1]} ' if code != 3200 else ''
+        return WeatherPlugin.ICONS[code][1] + ' ' if code != 3200 else ''
 
     @staticmethod
     def get_thumbnail(code: Union[int, str]) -> Optional[str]:
@@ -204,4 +205,4 @@ class WeatherPlugin(Plugin):
         if code != 3200:
             icon: str = WeatherPlugin.ICONS[code][0]
 
-            return f'http://openweathermap.org/img/w/{icon}.png'
+            return 'http://openweathermap.org/img/w/{}.png'.format(icon)
