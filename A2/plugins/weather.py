@@ -1,6 +1,4 @@
-"""
-Functions related to weather.
-"""
+"""Functions related to weather."""
 from typing import Optional, Union
 
 from disco.bot import Plugin
@@ -40,18 +38,17 @@ class WeatherPlugin(Plugin):
 
     @Plugin.command('weather', '<location:str...>')
     def weather_command(self, event: CommandEvent, location: str):
-        """
+        """= weather =
         Displays the weather for a given location.
-
         Provides information on temperature, atmosphere, wind, & astronomy.
-
-        Parameters
-        ----------
-        event : CommandEvent
-            The event which was created when this command triggered.
-        location : str
-            The location for which to look up the weather.
-
+        usage    :: $weather <location>
+        aliases  :: None
+        category :: Weather
+        == Arguments
+        location :: The location for which to look up the weather.
+        == Examples
+        $weather new york `Looks up the weather for New York city.`
+        $weather tokyo `Looks up the weather for Tokyo city.`
         """
         result: WeatherObject = self.weather.lookup_by_location(location)
 
@@ -82,16 +79,16 @@ class WeatherPlugin(Plugin):
 
     @Plugin.command('forecast', '<location:str...>')
     def forecast_command(self, event: CommandEvent, location: str):
-        """
+        """= forecast =
         Displays a 10-day weather forecast for a given location.
-
-        Parameters
-        ----------
-        event : CommandEvent
-            The event which was created when this command triggered.
-        location : str
-            The location for which to retrieve a forecast.
-
+        usage    :: $forecast <location>
+        aliases  :: None
+        category :: Weather
+        == Arguments
+        location :: The location for which to retrieve a forecast.
+        == Examples
+        $forecast new york `Looks up the forecast for New York city.`
+        $forecast tokyo `Looks up the forecast for Tokyo city.`
         """
         result: WeatherObject = self.weather.lookup_by_location(location)
 
@@ -120,9 +117,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def get_base_embed(result: WeatherObject) -> MessageEmbed:
-        """
-        Creates an embed and sets some common properties.
-        """
+        """Creates an embed and sets some common properties."""
         embed: MessageEmbed = MessageEmbed()
         embed.set_author(
             name='Yahoo! Weather',
@@ -134,9 +129,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_condition(result: WeatherObject) -> str:
-        """
-        Formats a string displaying the current condition information.
-        """
+        """Formats a string displaying the current condition information."""
         forecast: Forecast = result.forecast[0]
         emoji: str = WeatherPlugin.get_emoji(result.condition.code)
 
@@ -146,9 +139,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_atmosphere(atm: dict, units: Unit) -> str:
-        """
-        Formats a string to displays atmosphere information.
-        """
+        """Formats a string to displays atmosphere information."""
         state: str = WeatherPlugin.PRESSURE_STATES[int(atm['rising'])]
 
         return 'Humidity: `{}%`\nPressure: `{} {}` ({})\nVisibility: `{} {}`'\
@@ -157,9 +148,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_wind(wind: Wind, units: Unit) -> str:
-        """
-        Formats a string to displays wind information.
-        """
+        """Formats a string to displays wind information."""
         degrees: str = wind.direction
         cardinal: str = WeatherPlugin.get_cardinal_dir(degrees)
 
@@ -168,9 +157,7 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def format_astronomy(result: WeatherObject) -> str:
-        """
-        Formats a string to displays astronomy information.
-        """
+        """Formats a string to displays astronomy information."""
         tz: str = result.last_build_date[-3:]
         ast: dict = result.astronomy
 
@@ -179,27 +166,21 @@ class WeatherPlugin(Plugin):
 
     @staticmethod
     def get_cardinal_dir(degrees: Union[int, str]) -> str:
-        """
-        Converts degrees to an abbreviated cardinal direction.
-        """
+        """Converts degrees to an abbreviated cardinal direction."""
         index: int = int((int(degrees) % 360 / 22.5) + 0.5)
 
         return WeatherPlugin.CARDINAL_DIRS[index]
 
     @staticmethod
     def get_emoji(code: Union[int, str]) -> str:
-        """
-        Returns an emoji based on a condition code.
-        """
+        """Returns an emoji based on a condition code."""
         code: int = int(code)
 
         return WeatherPlugin.ICONS[code][1] + ' ' if code != 3200 else ''
 
     @staticmethod
     def get_thumbnail(code: Union[int, str]) -> Optional[str]:
-        """
-        Returns an OpenWeatherMap icon URL based on a condition code.
-        """
+        """Returns an OpenWeatherMap icon URL based on a condition code."""
         code: int = int(code)
 
         if code != 3200:
