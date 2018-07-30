@@ -1,6 +1,7 @@
 """Functions related to weather."""
 from disco.bot import Plugin
 from disco.types.message import MessageEmbed
+from weather import Unit
 from weather.weather import Weather
 
 
@@ -9,6 +10,7 @@ class WeatherPlugin(Plugin):
         'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
         'WSW', 'W', 'WNW', 'NW', 'NNW')
     PRESSURE_STATES = ('steady', 'rising', 'falling')
+    UNIT_CHOICES = list(vars(Unit).values())
 
     # Maps Yahoo's condition codes to OpenWeatherMap's weather icons and emojis.
     ICONS = (
@@ -30,26 +32,36 @@ class WeatherPlugin(Plugin):
 
         self.weather = Weather()
 
-    @Plugin.command('weather', '<location:str...>')
-    def weather_command(self, event, location):
+    @Plugin.command('weather', parser=True)
+    @Plugin.parser.add_argument('location', nargs='+', type=str)
+    @Plugin.parser.add_argument(
+        '-u', '--unit', default=Unit.CELSIUS, type=str.lower,
+        choices=UNIT_CHOICES)
+    def weather_command(self, event, args):
         """= weather =
         Displays the weather for a given location.
         Provides information on temperature, atmosphere, wind, & astronomy.
-        usage    :: $weather <location>
-        aliases  :: None
-        category :: Weather
+        usage       :: $weather <location> [-u]
+        aliases     :: None
+        category    :: Weather
         == Arguments
-        location :: The location for which to look up the weather.
+        location    :: The location for which to look up the weather.
+        == Flags
+        -u/--unit   :: The unit of measurement in which to display temperature.
         == Examples
-        $weather new york `Looks up the weather for New York city.`
-        $weather tokyo `Looks up the weather for Tokyo city.`
+        $weather new york `Displays the weather for New York city.`
+        $weather singapore, sg -u f `Displays the weather for Singapore in Fahrenheit.`
+        $weather --unit c berlin `Displays the weather for Berlin in Celsius.`
         """
-        result = self.weather.lookup_by_location(location)
+        args.location = ' '.join(args.location)
+        self.weather.unit = args.unit
+        result = self.weather.lookup_by_location(args.location)
 
         # Sometimes the response is OK but only contains units. Assumes failure
         # if some arbitrary top-level element besides units doesn't exist.
         if not result or 'link' not in result.print_obj:
-            event.msg.reply('Could not find weather for `{}`.'.format(location))
+            event.msg.reply(
+                'Could not find weather for `{}`.'.format(args.location))
             return
 
         embed = self.get_base_embed(result)
@@ -71,26 +83,35 @@ class WeatherPlugin(Plugin):
 
         event.msg.reply(embed=embed)
 
-    @Plugin.command('forecast', '<location:str...>')
-    def forecast_command(self, event, location):
+    @Plugin.command('forecast', parser=True)
+    @Plugin.parser.add_argument('location', nargs='+', type=str)
+    @Plugin.parser.add_argument(
+        '-u', '--unit', default=Unit.CELSIUS, type=str.lower,
+        choices=UNIT_CHOICES)
+    def forecast_command(self, event, args):
         """= forecast =
         Displays a 10-day weather forecast for a given location.
-        usage    :: $forecast <location>
-        aliases  :: None
-        category :: Weather
+        usage       :: $forecast <location> [-u]
+        aliases     :: None
+        category    :: Weather
         == Arguments
-        location :: The location for which to retrieve a forecast.
+        location    :: The location for which to retrieve a forecast.
+        == Flags
+        -u/--unit   :: The unit of measurement in which to display temperature.
         == Examples
-        $forecast new york `Looks up the forecast for New York city.`
-        $forecast tokyo `Looks up the forecast for Tokyo city.`
+        $forecast new york `Displays the forecast for New York city.`
+        $forecast singapore, sg -u f `Displays the forecast for Singapore in Fahrenheit.`
+        $forecast --unit c berlin `Displays the forecast for Berlin in Celsius.`
         """
-        result = self.weather.lookup_by_location(location)
+        args.location = ' '.join(args.location)
+        self.weather.unit = args.unit
+        result = self.weather.lookup_by_location(args.location)
 
         # Sometimes the response is OK but only contains units. Assumes failure
         # if some arbitrary top-level element besides units doesn't exist.
         if not result or 'link' not in result.print_obj:
             event.msg.reply(
-                'Could not retrieve a forecast for `{}`.'.format(location))
+                'Could not retrieve a forecast for `{}`.'.format(args.location))
             return
 
         embed = self.get_base_embed(result)
