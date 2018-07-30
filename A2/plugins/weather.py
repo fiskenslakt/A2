@@ -118,6 +118,7 @@ class WeatherPlugin(Plugin):
             url='https://www.yahoo.com/news/weather',
             icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
         embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
+        embed.color = 4194448 # Yahoo! logo's purple.
 
         return embed
 
