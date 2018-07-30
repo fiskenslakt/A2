@@ -90,6 +90,10 @@ ENV/
 env.bak/
 venv.bak/
 
+# Pipenv
+Pipfile
+Pipfile.lock
+
 # Spyder project settings
 .spyderproject
 .spyproject
@@ -153,5 +157,10 @@ flycheck_*.el
 # directory configuration
 .dir-locals.el
 
+# JetBrains
+.idea/
+*.iws
+
 # A2
 *config.json
+/A2/config/
