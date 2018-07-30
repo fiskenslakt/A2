@@ -154,9 +154,19 @@ class WeatherPlugin(Plugin):
         forecast = result.forecast[0]
         emoji = WeatherPlugin.get_emoji(result.condition.code)
 
-        return '{0}{1}° {5} - {2}\nHigh: `{3}° {5}`\nLow: `{4}° {5}`'.format(
-            emoji, result.condition.temp, result.condition.text, forecast.high,
-            forecast.low, result.units.temperature)
+        temp = result.condition.temp
+        unit = result.units.temperature
+        alt_temp = WeatherPlugin.convert_temp(result.condition.temp, unit)
+        alt_unit = next(
+            u.upper() for u in WeatherPlugin.UNIT_CHOICES if u.upper() != unit)
+
+        condition = '{}{}° {} - {} ({}° {})\n'.format(
+            emoji, temp, unit, result.condition.text, alt_temp, alt_unit)
+
+        forecasts = 'High: `{0}° {2}`\nLow: `{1}° {2}`'.format(
+            forecast.high, forecast.low, unit)
+
+        return condition + forecasts
 
     @staticmethod
     def format_atmosphere(atm, units):
@@ -208,3 +218,19 @@ class WeatherPlugin(Plugin):
             icon = WeatherPlugin.ICONS[code][0]
 
             return 'http://openweathermap.org/img/w/{}.png'.format(icon)
+
+    @staticmethod
+    def convert_temp(temp, in_unit):
+        """Converts a temperature value to a given unit.
+
+        Converted temperature is rounded to 1 decimal place.
+        """
+        temp = int(temp)
+        in_unit = in_unit.lower()
+
+        if in_unit == Unit.FAHRENHEIT:
+            return round((temp - 32) * 5.0 / 9.0, 1)
+        elif in_unit == Unit.CELSIUS:
+            return round(9.0 / 5.0 * temp + 32, 1)
+
+        raise ValueError("Invalid output temperature unit: {}".format(in_unit))
