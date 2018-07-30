@@ -13,7 +13,7 @@ class WeatherPlugin(Plugin):
         'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
         'WSW', 'W', 'WNW', 'NW', 'NNW')
     PRESSURE_STATES = ('steady', 'rising', 'falling')
-    UNIT_CHOICES = list(vars(Unit).values())
+    UNIT_CHOICES = ('c', 'f')
 
     # Maps Yahoo's condition codes to OpenWeatherMap's weather icons and emojis.
     ICONS = (
