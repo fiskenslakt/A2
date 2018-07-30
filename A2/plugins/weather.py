@@ -1,10 +1,13 @@
 """Functions related to weather."""
-from disco.bot import Plugin
+from disco.bot import Config, Plugin
 from disco.types.message import MessageEmbed
 from weather import Unit
 from weather.weather import Weather
 
+class WeatherConfig(Config):
+    default_unit = Unit.CELSIUS
 
+@Plugin.with_config(WeatherConfig)
 class WeatherPlugin(Plugin):
     CARDINAL_DIRS = (
         'N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW',
@@ -27,16 +30,19 @@ class WeatherPlugin(Plugin):
         ('09d', '🌦️'), ('13d', '🌨️'), ('13d', '🌨️'), ('13d', '🌨️'),
         ('04d', '☁️'), ('11d', '🌩️'), ('13d', '🌨️'), ('11d', '🌩️'))
 
-    def __init__(self, bot, config):
-        super().__init__(bot, config)
+    def load(self, ctx):
+        super().load(ctx)
 
-        self.weather = Weather()
+        self.config.default_unit = self.config.default_unit.lower()
+        assert self.config.default_unit in self.UNIT_CHOICES, \
+            "Invalid default unit: {}".format(self.config.default_unit)
+
+        self.weather = Weather(self.config.default_unit)
 
     @Plugin.command('weather', parser=True)
     @Plugin.parser.add_argument('location', nargs='+', type=str)
     @Plugin.parser.add_argument(
-        '-u', '--unit', default=Unit.CELSIUS, type=str.lower,
-        choices=UNIT_CHOICES)
+        '-u', '--unit', type=str.lower, choices=UNIT_CHOICES)
     def weather_command(self, event, args):
         """= weather =
         Displays the weather for a given location.
@@ -54,7 +60,7 @@ class WeatherPlugin(Plugin):
         $weather --unit c berlin `Displays the weather for Berlin in Celsius.`
         """
         args.location = ' '.join(args.location)
-        self.weather.unit = args.unit
+        self.weather.unit = args.unit if args.unit else self.config.default_unit
         result = self.weather.lookup_by_location(args.location)
 
         # Sometimes the response is OK but only contains units. Assumes failure
@@ -86,8 +92,7 @@ class WeatherPlugin(Plugin):
     @Plugin.command('forecast', parser=True)
     @Plugin.parser.add_argument('location', nargs='+', type=str)
     @Plugin.parser.add_argument(
-        '-u', '--unit', default=Unit.CELSIUS, type=str.lower,
-        choices=UNIT_CHOICES)
+        '-u', '--unit', type=str.lower, choices=UNIT_CHOICES)
     def forecast_command(self, event, args):
         """= forecast =
         Displays a 10-day weather forecast for a given location.
@@ -104,7 +109,7 @@ class WeatherPlugin(Plugin):
         $forecast --unit c berlin `Displays the forecast for Berlin in Celsius.`
         """
         args.location = ' '.join(args.location)
-        self.weather.unit = args.unit
+        self.weather.unit = args.unit if args.unit else self.config.default_unit
         result = self.weather.lookup_by_location(args.location)
 
         # Sometimes the response is OK but only contains units. Assumes failure

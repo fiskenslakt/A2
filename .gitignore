@@ -163,3 +163,4 @@ flycheck_*.el
 
 # A2
 *config.json
+/A2/config/
