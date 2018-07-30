@@ -1,11 +1,16 @@
 """Functions related to weather."""
+from datetime import datetime
+import re
+
 from disco.bot import Config, Plugin
 from disco.types.message import MessageEmbed
 from weather import Unit
 from weather.weather import Weather
 
+
 class WeatherConfig(Config):
     default_unit = Unit.CELSIUS
+
 
 @Plugin.with_config(WeatherConfig)
 class WeatherPlugin(Plugin):
@@ -14,6 +19,9 @@ class WeatherPlugin(Plugin):
         'WSW', 'W', 'WNW', 'NW', 'NNW')
     PRESSURE_STATES = ('steady', 'rising', 'falling')
     UNIT_CHOICES = ('c', 'f')
+    TIME_FORMATS = {'c': '%H:%M', 'f': '%I:%M %p'}
+    TITLE_PATTERN = re.compile(
+        r'Conditions for (.+?) at ((\d+):(\d+) ([AP]M)) (.+)', re.IGNORECASE)
 
     # Maps Yahoo's condition codes to OpenWeatherMap's weather icons and emojis.
     ICONS = (
@@ -70,8 +78,11 @@ class WeatherPlugin(Plugin):
                 'Could not find weather for `{}`.'.format(args.location))
             return
 
+        title, tz = self.format_condition_title(
+            result.print_obj['item']['title'], result.units.temperature)
+
         embed = self.get_base_embed(result)
-        embed.title = result.print_obj['item']['title']
+        embed.title = title
         embed.set_thumbnail(url=self.get_thumbnail(result.condition.code))
         embed.description = self.format_condition(result)
         embed.add_field(
@@ -84,7 +95,7 @@ class WeatherPlugin(Plugin):
             inline=True)
         embed.add_field(
             name='Astronomy',
-            value=self.format_astronomy(result),
+            value=self.format_astronomy(result, tz),
             inline=True)
 
         event.msg.reply(embed=embed)
@@ -144,9 +155,22 @@ class WeatherPlugin(Plugin):
             url='https://www.yahoo.com/news/weather',
             icon_url='https://s.yimg.com/dh/ap/default/130909/y_200_a.png')
         embed.url = result.print_obj['link'].split('*')[-1]  # Removes RSS URL.
-        embed.color = 4194448 # Yahoo! logo's purple.
+        embed.color = 4194448  # Yahoo! logo's purple.
 
         return embed
+
+    @staticmethod
+    def format_condition_title(title, unit):
+        """Formats the time of a condition's title.
+
+        Returns the formatted title and parsed the timezone.
+        """
+        match = WeatherPlugin.TITLE_PATTERN.fullmatch(title)
+        time = WeatherPlugin.format_time(match.group(2), unit)
+        tz = match.group(6)
+        title = "Conditions for {} at {} {}".format(match.group(1), time, tz)
+
+        return title, tz
 
     @staticmethod
     def format_condition(result):
@@ -187,13 +211,14 @@ class WeatherPlugin(Plugin):
             degrees, cardinal, wind.speed, units.speed, wind.chill)
 
     @staticmethod
-    def format_astronomy(result):
+    def format_astronomy(result, tz):
         """Formats a string to displays astronomy information."""
-        tz = result.last_build_date[-3:]
-        ast = result.astronomy
+        unit = result.units.temperature
+        sunrise = WeatherPlugin.format_time(result.astronomy["sunrise"], unit)
+        sunset = WeatherPlugin.format_time(result.astronomy["sunset"], unit)
 
         return 'Sunrise: `{0} {2}`\nSunset: `{1} {2}`'.format(
-            ast["sunrise"], ast["sunset"], tz)
+            sunrise, sunset, tz)
 
     @staticmethod
     def get_cardinal_dir(degrees):
@@ -218,6 +243,14 @@ class WeatherPlugin(Plugin):
             icon = WeatherPlugin.ICONS[code][0]
 
             return 'http://openweathermap.org/img/w/{}.png'.format(icon)
+
+    @staticmethod
+    def format_time(in_time, unit):
+        """Formats time as 12/24 hour based on unit."""
+        in_time = re.sub(r'^0:', '12:', in_time, 1)
+        out_time = datetime.strptime(in_time, '%I:%M %p')
+
+        return out_time.strftime(WeatherPlugin.TIME_FORMATS[unit.lower()])
 
     @staticmethod
     def convert_temp(temp, in_unit):
