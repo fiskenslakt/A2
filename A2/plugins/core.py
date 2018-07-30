@@ -43,4 +43,4 @@ class CorePlugin(Plugin):
             reloaded_plugins.append(name)
 
         reloaded_plugins = '\n'.join(reloaded_plugins)
-        event.msg.reply('Plugins reloaded:\n```{}```'.format(reloaded_plugins))
+        event.msg.reply('Plugins reloaded:```\n{}```'.format(reloaded_plugins))
