@@ -39,5 +39,3 @@ class UtilitiesPlugin(Plugin):
         bot_choice = random.choice(options)
         if len(options) > 1:
             event.msg.reply('I choose: {}'.format(bot_choice))
-        print(options)
-
